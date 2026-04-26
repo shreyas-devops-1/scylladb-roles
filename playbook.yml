@@ -1,6 +1,7 @@
-- name: Install Redis on EC2 and Local
+---
+- name: Install ScyllaDB on EC2 and Local
   hosts: localhost
-  become: yes
+  become: true
 
   roles:
-       - scylla
+    - scylla
