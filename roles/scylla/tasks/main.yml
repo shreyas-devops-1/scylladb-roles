@@ -1,0 +1,77 @@
+- name: Install dependencies
+  apt:
+    # installing curl and gnupg
+    name:
+      - curl
+      - gnupg
+    state: present
+    update_cache: yes
+
+
+
+# adding repo key
+- name: Download Scylla repo script
+  get_url:
+    url: https://get.scylladb.com
+    dest: /tmp/scylla-repo.sh
+    mode: '0755'
+
+- name: Run Scylla repo script
+  command: /tmp/scylla-repo.sh
+  args:
+    creates: /etc/apt/sources.list.d/scylla.list
+# adding scylla db
+- name: Install ScyllaDB
+  apt:
+    name: scylla
+    state: present
+    update_cache: yes
+# adding scylla.yaml file
+- name: Copy scylla.yaml
+  template:
+    src: scylla.yaml.j2
+    dest: /etc/scylla/scylla.yaml
+  notify: Restart Scylla
+
+# starting scylla
+- name: Start Scylla
+  systemd:
+    name: scylla-server
+    state: started
+    enabled: yes
+
+# Wait for Scylla to be ready
+- name: Wait for Scylla port
+  wait_for:
+    port: 9042
+    delay: 10
+    timeout: 60
+
+# Change default password
+- name: Set cassandra password
+  shell: |
+    cqlsh -u cassandra -p cassandra -e "ALTER USER cassandra WITH PASSWORD '{{ scylla_password }}';"
+  ignore_errors: yes
+
+
+# Create keyspace
+- name: Create keyspace
+  shell: |
+    cqlsh -u cassandra -p {{ scylla_password }} -e "
+    CREATE KEYSPACE IF NOT EXISTS attendance_db
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+    "
+
+# Create user
+- name: Create otms_user
+  shell: |
+    cqlsh -u cassandra -p {{ scylla_password }} -e "
+    CREATE USER IF NOT EXISTS otms_user WITH PASSWORD '{{ scylla_password }}' NOSUPERUSER;
+    "
+
+# Grant permissions
+- name: Grant privileges on keyspace
+  shell: |
+    cqlsh -u cassandra -p {{ scylla_password }} -e "
+    GRANT ALL PERMISSIONS ON KEYSPACE attendance_db TO otms_user;
+    "

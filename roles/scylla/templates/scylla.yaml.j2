@@ -1,0 +1,9 @@
+cluster_name: 'Test Cluster'
+
+listen_address: {{ scylla_listen_address }}
+rpc_address: 0.0.0.0
+
+endpoint_snitch: SimpleSnitch
+developer_mode: true
+authenticator: PasswordAuthenticator
+authorizer: CassandraAuthorizer

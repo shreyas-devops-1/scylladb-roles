@@ -1,0 +1,2 @@
+scylla_password: "12345"
+scylla_listen_address: "0.0.0.0"
