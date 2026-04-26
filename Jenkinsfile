@@ -41,7 +41,7 @@ pipeline {
             steps {
                 sh '''
                     echo "===== Running Ansible Playbook ====="
-                    ansible-playbook -i ${INVENTORY} ${PLAYBOOK} --ask-become-pass
+                    sudo ansible-playbook -i ${INVENTORY} ${PLAYBOOK}
                 '''
             }
         }
