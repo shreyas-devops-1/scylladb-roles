@@ -22,12 +22,16 @@ pipeline {
             }
         }
 
-        stage('Verify Files') {
+        stage('Verify Repository Files') {
             steps {
                 sh '''
-                    echo "Checking repository files..."
+                    echo "===== Repository Files ====="
                     ls -la
-                    echo "Checking Ansible version..."
+
+                    echo "===== Roles Directory ====="
+                    ls -la roles/
+
+                    echo "===== Ansible Version ====="
                     ansible --version
                 '''
             }
@@ -35,9 +39,10 @@ pipeline {
 
         stage('Run Ansible Playbook') {
             steps {
-                sh """
-                    ansible-playbook -i ${INVENTORY} ${PLAYBOOK}
-                """
+                sh '''
+                    echo "===== Running Ansible Playbook ====="
+                    sudo ansible-playbook -i ${INVENTORY} ${PLAYBOOK}
+                '''
             }
         }
     }
@@ -48,7 +53,11 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed. Please check logs.'
+            echo 'Pipeline failed. Please check Jenkins console output.'
+        }
+
+        always {
+            echo 'Pipeline execution finished.'
         }
     }
 }
