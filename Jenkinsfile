@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/shreyas-devops-1/scylladb-roles.git'
-        BRANCH = 'main'
-        PLAYBOOK = 'playbook.yml'
+        GIT_REPO  = 'https://github.com/shreyas-devops-1/scylladb-roles.git'
+        BRANCH    = 'main'
+        PLAYBOOK  = 'playbook.yml'
         INVENTORY = 'inventory.ini'
     }
 
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 sh '''
                     echo "===== Running Ansible Playbook ====="
-                    sudo ansible-playbook -i ${INVENTORY} ${PLAYBOOK}
+                    ansible-playbook -i ${INVENTORY} ${PLAYBOOK} --ask-become-pass
                 '''
             }
         }
