@@ -1,3 +1,5 @@
+---
+
 - name: Restart Scylla
   systemd:
     name: scylla-server
