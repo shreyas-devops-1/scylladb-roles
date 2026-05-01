@@ -1,5 +1,4 @@
 ---
-
 - name: Install dependencies
   apt:
     # installing curl and gnupg
@@ -7,9 +6,7 @@
       - curl
       - gnupg
     state: present
-    update_cache: yes
-
-
+    update_cache: true
 
 # adding repo key
 - name: Download Scylla repo script
@@ -22,12 +19,14 @@
   command: /tmp/scylla-repo.sh
   args:
     creates: /etc/apt/sources.list.d/scylla.list
+
 # adding scylla db
 - name: Install ScyllaDB
   apt:
     name: scylla
     state: present
-    update_cache: yes
+    update_cache: true
+
 # adding scylla.yaml file
 - name: Copy scylla.yaml
   template:
@@ -40,7 +39,7 @@
   systemd:
     name: scylla-server
     state: started
-    enabled: yes
+    enabled: true
 
 # Wait for Scylla to be ready
 - name: Wait for Scylla port
@@ -53,8 +52,7 @@
 - name: Set cassandra password
   shell: |
     cqlsh -u cassandra -p cassandra -e "ALTER USER cassandra WITH PASSWORD '{{ scylla_password }}';"
-  ignore_errors: yes
-
+  ignore_errors: true
 
 # Create keyspace
 - name: Create keyspace

@@ -2,6 +2,5 @@
 - name: Install ScyllaDB on EC2 and Local
   hosts: localhost
   become: true
-
   roles:
     - scylla
