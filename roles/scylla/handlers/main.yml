@@ -1,5 +1,5 @@
 ---
 - name: Restart Scylla
-  systemd:
+  ansible.builtin.systemd:
     name: scylla-server
     state: restarted

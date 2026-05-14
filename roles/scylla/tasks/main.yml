@@ -1,70 +1,76 @@
 ---
 - name: Install dependencies
-  apt:
-    # installing curl and gnupg
+  ansible.builtin.apt:
     name:
       - curl
       - gnupg
     state: present
     update_cache: true
-# adding repo key
+
 - name: Download Scylla repo script
-  get_url:
+  ansible.builtin.get_url:
     url: https://get.scylladb.com
     dest: /tmp/scylla-repo.sh
     mode: '0755'
+
 - name: Run Scylla repo script
-  command: /tmp/scylla-repo.sh
+  ansible.builtin.command: /tmp/scylla-repo.sh
   args:
     creates: /etc/apt/sources.list.d/scylla.list
-# adding scylla db
+  changed_when: false
+
 - name: Install ScyllaDB
-  apt:
+  ansible.builtin.apt:
     name: scylla
     state: present
     update_cache: true
-# adding scylla.yaml file
+
 - name: Copy scylla.yaml
-  template:
+  ansible.builtin.template:
     src: scylla.yaml.j2
     dest: /etc/scylla/scylla.yaml
+    mode: '0644'
   notify: Restart Scylla
-# starting scylla
+
 - name: Start Scylla
-  systemd:
+  ansible.builtin.systemd:
     name: scylla-server
     state: started
     enabled: true
-# Wait for Scylla to be ready
+
 - name: Wait for Scylla port
-  wait_for:
+  ansible.builtin.wait_for:
     port: 9042
     delay: 10
     timeout: 60
-# Change default password
+
 - name: Set cassandra password
-  shell: |
+  ansible.builtin.shell: |
     cqlsh -u cassandra -p cassandra \
       -e "ALTER USER cassandra WITH PASSWORD '{{ scylla_password }}';"
-  ignore_errors: true
-# Create keyspace
+  changed_when: false
+  failed_when: false
+
 - name: Create keyspace
-  shell: |
+  ansible.builtin.shell: |
     cqlsh -u cassandra -p {{ scylla_password }} -e "
     CREATE KEYSPACE IF NOT EXISTS attendance_db
     WITH replication = {
       'class': 'SimpleStrategy', 'replication_factor': 1};
     "
-# Create user
+  changed_when: false
+
 - name: Create otms_user
-  shell: |
+  ansible.builtin.shell: |
     cqlsh -u cassandra -p {{ scylla_password }} -e "
     CREATE USER IF NOT EXISTS otms_user
     WITH PASSWORD '{{ scylla_password }}' NOSUPERUSER;
     "
-# Grant permissions
+  changed_when: false
+
 - name: Grant privileges on keyspace
-  shell: |
+  ansible.builtin.shell: |
     cqlsh -u cassandra -p {{ scylla_password }} -e "
     GRANT ALL PERMISSIONS ON KEYSPACE attendance_db TO otms_user;
     "
+  changed_when: false
