@@ -6,24 +6,28 @@
       - gnupg
     state: present
     update_cache: true
+  when: not ansible_check_mode
 
 - name: Download Scylla repo script
   ansible.builtin.get_url:
     url: https://get.scylladb.com
     dest: /tmp/scylla-repo.sh
     mode: '0755'
+  when: not ansible_check_mode
 
 - name: Run Scylla repo script
   ansible.builtin.command: /tmp/scylla-repo.sh
   args:
     creates: /etc/apt/sources.list.d/scylla.list
   changed_when: false
+  when: not ansible_check_mode
 
 - name: Install ScyllaDB
   ansible.builtin.apt:
     name: scylla
     state: present
     update_cache: true
+  when: not ansible_check_mode
 
 - name: Copy scylla.yaml
   ansible.builtin.template:
@@ -31,18 +35,21 @@
     dest: /etc/scylla/scylla.yaml
     mode: '0644'
   notify: Restart Scylla
+  when: not ansible_check_mode
 
 - name: Start Scylla
   ansible.builtin.systemd:
     name: scylla-server
     state: started
     enabled: true
+  when: not ansible_check_mode
 
 - name: Wait for Scylla port
   ansible.builtin.wait_for:
     port: 9042
     delay: 10
     timeout: 60
+  when: not ansible_check_mode
 
 - name: Set cassandra password
   ansible.builtin.shell: |
@@ -50,6 +57,7 @@
       -e "ALTER USER cassandra WITH PASSWORD '{{ scylla_password }}';"
   changed_when: false
   failed_when: false
+  when: not ansible_check_mode
 
 - name: Create keyspace
   ansible.builtin.shell: |
@@ -59,6 +67,7 @@
       'class': 'SimpleStrategy', 'replication_factor': 1};
     "
   changed_when: false
+  when: not ansible_check_mode
 
 - name: Create otms_user
   ansible.builtin.shell: |
@@ -67,6 +76,7 @@
     WITH PASSWORD '{{ scylla_password }}' NOSUPERUSER;
     "
   changed_when: false
+  when: not ansible_check_mode
 
 - name: Grant privileges on keyspace
   ansible.builtin.shell: |
@@ -74,3 +84,4 @@
     GRANT ALL PERMISSIONS ON KEYSPACE attendance_db TO otms_user;
     "
   changed_when: false
+  when: not ansible_check_mode
